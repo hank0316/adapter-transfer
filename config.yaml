@@ -1,0 +1,20 @@
+trainer:
+  learning_rate: 1.0e-4
+  train_step: 6000
+  logging_step: 50
+  eval_step: 50
+  save_step: 50
+  # Arguments for trainer
+  load_best_model_at_end: True
+  overwrite_output_dir: True
+  remove_unused_columns: False
+  # Path to store the checkpoints
+  ckpt_path: 'checkpoint-best'
+  # Path of output log
+  logging_dir: 'log'
+
+model:
+  name: 'roberta-base'
+
+tasks:
+  name: ['rte', 'stsb', 'mrpc', 'cola']
