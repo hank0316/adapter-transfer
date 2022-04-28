@@ -27,7 +27,8 @@ def default_config():
 
 def trainSingleTransfer(
     task: str, 
-    trainer_config: dict, 
+    trainer_config: dict,
+    model_config: dict,
     model: Union[BertModelWithHeads, RobertaModelWithHeads],
     cur_dir: list,
     load_if_exists=True
@@ -39,9 +40,10 @@ def trainSingleTransfer(
         return
 
     print(f'{os.path.join(*cur_dir)}/{trainer_config["ckpt_path"]} not found. Start training...')
+
     # Start Training
     model.train_adapter('adapter')        # 先這樣寫
-    data_manager = DatasetManager(task)
+    data_manager = DatasetManager(task, tokenizer=model_config['name'])
     model.add_classification_head(task, num_labels=data_manager.getNumLabels())    # 如果要用不同類型的，這邊就寫個 if
 
     # Arguments for AdapterTrainer
@@ -89,8 +91,10 @@ def trainTransfer(transfer_sequence: List[str], load_if_exists=True, **kwargs):
         print("[trainTransfer]: Using default config.")
         print(json.dumps(config, indent=4))
 
+    # Configurations
     model_config = config['model']
     trainer_config = config['trainer']
+
     # Load Model
     if 'roberta' in model_config['name']:
         pretrain_config = RobertaConfig.from_pretrained(model_config["name"])
@@ -107,9 +111,10 @@ def trainTransfer(transfer_sequence: List[str], load_if_exists=True, **kwargs):
     else:
         raise
 
+    # Run single task transfer
     cur_dir = []
     model.add_adapter('adapter')
     model.train_adapter('adapter')     # 這行會 freeze model weight
     for task in transfer_sequence:
         cur_dir.append(task)
-        trainSingleTransfer(task, trainer_config, model, cur_dir, load_if_exists)
+        trainSingleTransfer(task, trainer_config, model_config, model, cur_dir, load_if_exists)

@@ -16,5 +16,7 @@ trainer:
 model:
   name: 'roberta-base'
 
-tasks:
-  name: ['rte', 'stsb', 'mrpc', 'cola']
+exp_setup:
+  chain_length: 3
+  tasks:
+    name: ['rte', 'stsb', 'mrpc', 'cola']

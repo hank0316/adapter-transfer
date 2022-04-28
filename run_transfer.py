@@ -14,8 +14,8 @@ def main():
             print(exc)
             exit(-1)
     
-    tasks = config['tasks']['name']
-    for sequence in permutations(tasks, 3):
+    tasks = config['exp_setup']['tasks']['name']
+    for sequence in permutations(tasks, config['exp_setup']['chain_length']):
         print('=*=*=*=*= Current Sequence =*=*=*=*=')
         print(list(sequence))
         print('=*=*=*=*= Current Sequence =*=*=*=*=')
