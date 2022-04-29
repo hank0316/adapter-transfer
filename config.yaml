@@ -1,9 +1,9 @@
 trainer:
   learning_rate: 1.0e-4
   train_step: 6000
-  logging_step: 200
-  eval_step: 200
-  save_step: 200
+  logging_step: 250
+  eval_step: 250
+  save_step: 250
   # Arguments for trainer
   load_best_model_at_end: True
   overwrite_output_dir: True
@@ -13,7 +13,7 @@ trainer:
   # Path of output log
   logging_dir: 'log'
   # Trainer will store model according to this metric
-  metric_for_best_model : 'eval_acc'
+  metric_for_best_model : 'eval_'
 
 model:
   name: 'roberta-base'
@@ -22,3 +22,8 @@ exp_setup:
   chain_length: 3
   tasks:
     name: ['rte', 'stsb', 'mrpc', 'cola']
+    metrics:
+      stsb: 'spearmanr'
+      rte: 'acc'
+      mrpc: 'acc'
+      cola: 'matthews'

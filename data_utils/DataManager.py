@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from scipy.stats import spearmanr
-from datasets import load_dataset
+from datasets import load_dataset, load_metric
 from transformers import EvalPrediction
 
 from data_utils.Dataset import CustomDataset
@@ -30,14 +30,25 @@ class DatasetManager:
         def compute_accuracy(p: EvalPrediction):
             preds = np.argmax(p.predictions, axis=1)
             return {"acc": (preds == p.label_ids).mean()}
+
         def compute_spearmanr(p: EvalPrediction):
             preds = np.squeeze(p.predictions)
             labels = np.squeeze(p.label_ids)
             return {"spearmanr": spearmanr(preds, labels).correlation}
+        
+        def compute_matthews(p: EvalPrediction):
+            preds = np.argmax(p.predictions, axis=1)
+            metric = load_metric('matthews_correlation')
+            return {"matthews": metric.compute(references=p.label_ids, predictions=preds)['matthews_correlation']}
+        
         if self.task_name in ['rte', 'mrpc']:
             return compute_accuracy
         elif self.task_name in ['stsb']:
             return compute_spearmanr
+        elif self.task_name in ['cola']:
+            return compute_matthews
+        else:
+            raise NotImplementedError
 
     def getCriteria(self):
         pass
