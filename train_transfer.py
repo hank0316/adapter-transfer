@@ -2,7 +2,7 @@ import os
 import json
 
 from typing import List, Union
-from transformers import RobertaConfig, RobertaModelWithHeads, BertConfig, BertModelWithHeads
+from transformers import RobertaConfig, RobertaAdapterModel, BertConfig, BertAdapterModel
 from transformers import TrainingArguments, AdapterTrainer
 
 from data_utils.DataManager import DatasetManager
@@ -11,13 +11,15 @@ def default_config():
     return {
         "trainer": {
             "train_step": 6000,
-            "logging_step": 50,
-            "eval_step": 50,
-            "save_step": 50,
+            "logging_step": 200,
+            "eval_step": 200,
+            "save_step": 200,
             "load_best_model_at_end": True,
             "overwrite_output_dir": True,
             "remove_unused_columns": False,
-            "ckpt_path": "checkpoint-best"
+            "ckpt_path": "checkpoint-best",
+            "logging_dir": 'log',
+            "metric_for_best_model" : 'eval_acc'
         },
         "model": {
             "name": "roberta-base"
@@ -29,11 +31,10 @@ def trainSingleTransfer(
     task: str, 
     trainer_config: dict,
     model_config: dict,
-    model: Union[BertModelWithHeads, RobertaModelWithHeads],
+    model: Union[BertAdapterModel, RobertaAdapterModel],
     cur_dir: list,
     load_if_exists=True
 ):
-
     if load_if_exists == True and os.path.exists(f'{os.path.join(*cur_dir)}/{trainer_config["ckpt_path"]}'):
         model.load_adapter(f'{os.path.join(*cur_dir)}/{trainer_config["ckpt_path"]}/adapter')
         print(f'{os.path.join(*cur_dir)}/{trainer_config["ckpt_path"]} found. Weights are loaded and skip training.')
@@ -50,12 +51,17 @@ def trainSingleTransfer(
     training_args = TrainingArguments(    # 我在想這些是不是也要按 task 去調整
         learning_rate=trainer_config['learning_rate'],
         max_steps=trainer_config['train_step'],
-        logging_steps=trainer_config['logging_step'],
         save_steps=trainer_config['save_step'],
+
         eval_steps=trainer_config['eval_step'],
         evaluation_strategy='steps',
+
+        logging_steps=trainer_config['logging_step'],
         logging_dir=trainer_config['logging_dir'],
+
         load_best_model_at_end=trainer_config['load_best_model_at_end'],
+        metric_for_best_model='eval_acc',
+
         output_dir=f"{os.path.join(*cur_dir)}",
         overwrite_output_dir=trainer_config['overwrite_output_dir'],
         # The next line is important to ensure the dataset labels are properly passed to the model
@@ -69,6 +75,8 @@ def trainSingleTransfer(
         eval_dataset=data_manager.getDataSplit('eval'),
         compute_metrics=data_manager.getMetric()
     )
+
+    print(vars(trainer))
 
     trainer.train()
     res = trainer.evaluate()
@@ -98,13 +106,13 @@ def trainTransfer(transfer_sequence: List[str], load_if_exists=True, **kwargs):
     # Load Model
     if 'roberta' in model_config['name']:
         pretrain_config = RobertaConfig.from_pretrained(model_config["name"])
-        model = RobertaModelWithHeads.from_pretrained(
+        model = RobertaAdapterModel.from_pretrained(
             model_config["name"], 
             config=pretrain_config
         )
     elif 'bert' in model_config['name']:
         pretrain_config = BertConfig.from_pretrained(model_config["name"])
-        model = BertModelWithHeads.from_pretrained(
+        model = BertAdapterModel.from_pretrained(
             model_config["name"], 
             config=pretrain_config
         )

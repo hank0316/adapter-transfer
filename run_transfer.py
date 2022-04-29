@@ -5,6 +5,7 @@ from train_transfer import trainTransfer
 
 import os
 os.environ["TRANSFORMERS_CACHE"] = "/tmp2/b08902126/cache"
+os.environ["HF_DATASETS_CACHE"] = "/tmp2/b08902126/cache"
 
 def main():
     with open('config.yaml', 'r') as f:

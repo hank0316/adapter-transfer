@@ -1,9 +1,9 @@
 trainer:
   learning_rate: 1.0e-4
   train_step: 6000
-  logging_step: 50
-  eval_step: 50
-  save_step: 50
+  logging_step: 200
+  eval_step: 200
+  save_step: 200
   # Arguments for trainer
   load_best_model_at_end: True
   overwrite_output_dir: True
@@ -12,6 +12,8 @@ trainer:
   ckpt_path: 'checkpoint-best'
   # Path of output log
   logging_dir: 'log'
+  # Trainer will store model according to this metric
+  metric_for_best_model : 'eval_acc'
 
 model:
   name: 'roberta-base'
