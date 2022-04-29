@@ -122,7 +122,7 @@ def trainTransfer(transfer_sequence: List[str], load_if_exists=True, **kwargs):
 
     # Run single task transfer
     cur_dir = []
-    model.add_adapter('adapter')
+    model.add_adapter('adapter', config='pfeiffer')
     model.train_adapter('adapter')     # 這行會 freeze model weight
     for task in transfer_sequence:
         cur_dir.append(task)
