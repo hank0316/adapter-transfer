@@ -15,6 +15,7 @@ class DatasetManager:
             self.data = CustomDataset(self.raw_set, task_name=self.task_name)
         else:
             raise NotImplementedError
+    
     def getDataSplit(self, split='train'):
         if split == 'train':
             return self.data['train']
@@ -24,6 +25,7 @@ class DatasetManager:
             return self.data['test']
         else:
             return None
+    
     def getMetric(self):
         def compute_accuracy(p: EvalPrediction):
             preds = np.argmax(p.predictions, axis=1)
@@ -36,7 +38,9 @@ class DatasetManager:
             return compute_accuracy
         elif self.task_name in ['stsb']:
             return compute_spearmanr
+
     def getCriteria(self):
         pass
+    
     def getNumLabels(self):
         return self.num_labels[self.task_name]
