@@ -75,9 +75,7 @@ def trainSingleTransfer(
         eval_dataset=data_manager.getDataSplit('eval'),
         compute_metrics=data_manager.getMetric()
     )
-
-    print(vars(trainer))
-
+    
     trainer.train()
     res = trainer.evaluate()
     with open(f'{os.path.join(*cur_dir)}/result.json', 'w') as f:
