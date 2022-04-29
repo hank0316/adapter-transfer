@@ -11,15 +11,15 @@ def default_config():
     return {
         "trainer": {
             "train_step": 6000,
-            "logging_step": 200,
-            "eval_step": 200,
-            "save_step": 200,
+            "logging_step": 250,
+            "eval_step": 250,
+            "save_step": 250,
             "load_best_model_at_end": True,
             "overwrite_output_dir": True,
             "remove_unused_columns": False,
             "ckpt_path": "checkpoint-best",
             "logging_dir": 'log',
-            "metric_for_best_model" : 'eval_acc'
+            "metric_for_best_model" : 'eval_'
         },
         "model": {
             "name": "roberta-base"
@@ -29,12 +29,15 @@ def default_config():
 
 def trainSingleTransfer(
     task: str, 
-    trainer_config: dict,
-    model_config: dict,
+    config: dict,
     model: Union[BertAdapterModel, RobertaAdapterModel],
     cur_dir: list,
     load_if_exists=True
 ):
+    trainer_config = config['trainer']
+    model_config = config['model']
+    task_config = config['exp_setup']['tasks']
+
     if load_if_exists == True and os.path.exists(f'{os.path.join(*cur_dir)}/{trainer_config["ckpt_path"]}'):
         model.load_adapter(f'{os.path.join(*cur_dir)}/{trainer_config["ckpt_path"]}/adapter')
         print(f'{os.path.join(*cur_dir)}/{trainer_config["ckpt_path"]} found. Weights are loaded and skip training.')
@@ -60,7 +63,7 @@ def trainSingleTransfer(
         logging_dir=trainer_config['logging_dir'],
 
         load_best_model_at_end=trainer_config['load_best_model_at_end'],
-        metric_for_best_model='eval_acc',
+        metric_for_best_model=trainer_config['metric_for_best_model'] + task_config['metrics'][task],
 
         output_dir=f"{os.path.join(*cur_dir)}",
         overwrite_output_dir=trainer_config['overwrite_output_dir'],
@@ -123,4 +126,4 @@ def trainTransfer(transfer_sequence: List[str], load_if_exists=True, **kwargs):
     model.train_adapter('adapter')     # 這行會 freeze model weight
     for task in transfer_sequence:
         cur_dir.append(task)
-        trainSingleTransfer(task, trainer_config, model_config, model, cur_dir, load_if_exists)
+        trainSingleTransfer(task, config, model, cur_dir, load_if_exists)
