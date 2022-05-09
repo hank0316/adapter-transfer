@@ -7,12 +7,12 @@ from transformers import EvalPrediction
 from data_utils.Dataset import CustomDataset
 
 class DatasetManager:
-    def __init__(self, task_name, tokenizer='roberta-base'):
+    def __init__(self, task_name, tokenizer='roberta-base', size=1000):
         self.task_name = task_name
         self.num_labels = {'rte' : 2, 'stsb' : 1, 'mrpc' : 2, 'cola' : 2}
         if self.task_name in ['rte', 'stsb', 'mrpc', 'cola']:
             self.raw_set = load_dataset('glue', self.task_name)
-            self.data = CustomDataset(self.raw_set, task_name=self.task_name)
+            self.data = CustomDataset(self.raw_set, task_name=self.task_name, train_size=size)
         else:
             raise NotImplementedError
     
