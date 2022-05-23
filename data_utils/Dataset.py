@@ -29,6 +29,6 @@ class CustomDataset(Dataset):
             raise NotImplementedError
     
     def subset(self, data_to_subset, size):
-        torch.manual_seed(self.seed)
+        torch.manual_seed(316)
         indices = torch.randperm(len(data_to_subset))[: min(len(data_to_subset), size)]
         return datasets.Dataset.from_dict(data_to_subset[indices])
