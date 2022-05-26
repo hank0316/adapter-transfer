@@ -1,5 +1,5 @@
 trainer:
-  learning_rate: 1.0e-4
+  learning_rate: 3.0e-5
   train_step: 2000
   logging_step: 250
   eval_step: 250
