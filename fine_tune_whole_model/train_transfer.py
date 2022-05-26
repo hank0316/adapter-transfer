@@ -1,5 +1,6 @@
 import os
 import json
+import sys
 
 from typing import List, Union
 from transformers import (
@@ -30,6 +31,14 @@ def default_config():
         }
     }
 
+def returnModel(model: AutoModelForSequenceClassification, config: dict):
+    model_config = config['model']
+    if 'roberta' in model_config['name']:
+        return model.roberta
+    elif 'bert' in model_config['name']:
+        return model.bert
+    else:
+        raise NotImplementedError
 
 def trainSingleTransfer(
     task: str, 
@@ -47,7 +56,7 @@ def trainSingleTransfer(
     if load_if_exists == True and os.path.exists(save_path):
         model = AutoModelForSequenceClassification.from_pretrained(save_path)
         print(f'{save_path} found. Weights are loaded and skip training.')
-        return
+        return returnModel(model, config)
 
     print(f'{save_path} not found. Start training...')
 
@@ -60,7 +69,7 @@ def trainSingleTransfer(
             model_config["name"], 
             num_labels=data_manager.getNumLabels()
         )
-        print(f'[Info]: pretrain_config = {pretrain_config}')
+        print(f'[Info]: pretrain_config = {pretrain_config}', file=sys.stderr)
         model = AutoModelForSequenceClassification.from_pretrained(
             model_config["name"], 
             config=pretrain_config
@@ -73,7 +82,7 @@ def trainSingleTransfer(
         else:
             raise NotImplementedError
         
-        print(f'[Info]: model: {model}')
+        print(f'[Info]: model: {model}', file=sys.stderr)
     else:
         raise NotImplementedError
 
@@ -116,12 +125,7 @@ def trainSingleTransfer(
     model.save_pretrained(save_path)
 
     # return upstream base model
-    if 'roberta' in model_config['name']:
-        return model.roberta
-    elif 'bert' in model_config['name']:
-        return model.bert
-    else:
-        raise NotImplementedError
+    return returnModel(model, config)
 
 
 def trainTransfer(transfer_sequence: List[str], load_if_exists=True, **kwargs):
