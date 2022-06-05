@@ -4,11 +4,11 @@ from torch.utils.data import Dataset
 from transformers import AutoTokenizer
 
 class CustomDataset(Dataset):
-    def __init__(self, data_split, task_name=None, tokenizer='roberta-base', train_size=1000, seed=316):
+    def __init__(self, data_split, task_name=None, tokenizer='roberta-base', train_size=1000, data_seed=316):
         self.data = data_split
         self.task_name = task_name
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer)
-        self.seed = seed
+        self.data_seed = data_seed
         self.data['train'] = self.subset(self.data['train'], train_size)
         self.data = self.data.map(self.encode_batch, batched=True)
         self.data = self.data.rename_column('label', 'labels')
@@ -29,6 +29,6 @@ class CustomDataset(Dataset):
             raise NotImplementedError
     
     def subset(self, data_to_subset, size):
-        torch.manual_seed(self.seed)
+        torch.manual_seed(self.data_seed)
         indices = torch.randperm(len(data_to_subset))[: min(len(data_to_subset), size)]
         return datasets.Dataset.from_dict(data_to_subset[indices])
