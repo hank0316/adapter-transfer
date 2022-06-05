@@ -209,10 +209,6 @@ def collate_fn(samples: List[dict]):
 def computeMetric(task: str, x, y):
     from scipy.stats import spearmanr
     from datasets import load_metric
-    if task == 'cola':
-        print(x)
-        print('-'*10)
-        print(y)
     if task in ['rte', 'mrpc']:
         return {'acc': (x == y).mean()}
     elif task == 'stsb':
