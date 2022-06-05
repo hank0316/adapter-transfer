@@ -20,8 +20,11 @@ model:
 
 exp_setup:
   chain_length: 3
+  # For MTL
+  num_multi_task: 3
+  mtl_batch_size: 8
   tasks:
-    name: ['rte', 'stsb', 'mrpc', 'cola']
+    name: ['rte', 'stsb', 'cola', 'cola']
     metrics:
       stsb: 'spearmanr'
       rte: 'acc'
