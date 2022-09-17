@@ -1,4 +1,4 @@
-name: transfer
+name: adapter-transfer
 channels:
   - defaults
 dependencies:
@@ -44,6 +44,7 @@ dependencies:
     - numpy==1.22.3
     - packaging==21.3
     - pandas==1.4.2
+    - pillow==9.2.0
     - pyarrow==7.0.0
     - pyparsing==3.0.8
     - python-dateutil==2.8.2
@@ -59,10 +60,12 @@ dependencies:
     - sklearn==0.0
     - threadpoolctl==3.1.0
     - tokenizers==0.12.1
-    - torch==1.11.0
+    - torch==1.12.1+cu116
+    - torchaudio==0.12.1+cu116
+    - torchvision==0.13.1+cu116
     - tqdm==4.64.0
     - typing-extensions==4.2.0
     - urllib3==1.26.9
     - xxhash==3.0.0
     - yarl==1.7.2
-prefix: /tmp2/b08902126/miniconda3/envs/transfer
+prefix: /tmp2/b08902126/miniconda3/envs/adapter-transfer
