@@ -60,9 +60,9 @@ dependencies:
     - sklearn==0.0
     - threadpoolctl==3.1.0
     - tokenizers==0.12.1
-    - torch==1.12.1+cu116
-    - torchaudio==0.12.1+cu116
-    - torchvision==0.13.1+cu116
+#    - torch==1.12.1+cu116
+#    - torchaudio==0.12.1+cu116
+#    - torchvision==0.13.1+cu116
     - tqdm==4.64.0
     - typing-extensions==4.2.0
     - urllib3==1.26.9
