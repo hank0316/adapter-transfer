@@ -5,7 +5,9 @@ Experiments about adapter transfer.
 
 Use `miniconda`:
 ```bash
-conda create --name {env_name} -f environment.yml
+conda env create --name {env_name} -f environment.yml
+conda activate {env_name}
+pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
 ```
 
 ## Run Experiment
