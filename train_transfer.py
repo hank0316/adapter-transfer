@@ -14,6 +14,7 @@ def default_config():
             "logging_step": 250,
             "eval_step": 250,
             "save_step": 250,
+            "save_total_limit": 1,
             "load_best_model_at_end": True,
             "overwrite_output_dir": True,
             "remove_unused_columns": False,
@@ -55,7 +56,7 @@ def trainSingleTransfer(
         learning_rate=trainer_config['learning_rate'],
         max_steps=trainer_config['train_step'],
         save_steps=trainer_config['save_step'],
-
+        save_total_limit=trainer_config['save_total_limit'],
         eval_steps=trainer_config['eval_step'],
         evaluation_strategy='steps',
 
