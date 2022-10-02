@@ -3,7 +3,7 @@ import datasets
 from torch.utils.data import Dataset
 from transformers import AutoTokenizer
 
-class CustomDataset(Dataset):
+class GLUEDataset(Dataset):
     def __init__(self, data_split, task_name=None, tokenizer='roberta-base', train_size=1000, data_seed=316):
         self.data = data_split
         self.task_name = task_name
@@ -21,10 +21,16 @@ class CustomDataset(Dataset):
         return self.data[i]
         
     def encode_batch(self, batch):
-        if self.task_name in ['rte', 'stsb', 'mrpc']:
+        if self.task_name in ['rte', 'stsb', 'mrpc', 'wnli']:
             return self.tokenizer(batch['sentence1'], batch['sentence2'], padding='max_length')
-        elif self.task_name in ['cola']:
+        elif self.task_name in ['cola', 'sst2']:
             return self.tokenizer(batch['sentence'], padding='max_length')
+        elif self.task_name in ['qqp']:
+            return self.tokenizer(batch['question1'], batch['question2'], padding='max_length')
+        elif self.task_name in ['mnli']:
+            return self.tokenizer(batch['premise'], batch['hypothesis'], padding='max_length')
+        elif self.task_name in ['qnli']:
+            return self.tokenizer(batch['question'], batch['sentence'], padding='max_length')
         else:
             raise NotImplementedError
     
