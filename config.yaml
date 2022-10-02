@@ -4,6 +4,7 @@ trainer:
   logging_step: 250
   eval_step: 250
   save_step: 250
+  save_total_limit: 1
   # Arguments for trainer
   load_best_model_at_end: True
   overwrite_output_dir: True
