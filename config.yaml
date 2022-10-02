@@ -28,6 +28,6 @@ exp_setup:
     name: ['rte', 'stsb', 'mrpc', 'cola']
     metrics:
       stsb: 'spearmanr'
-      rte: 'acc'
-      mrpc: 'acc'
-      cola: 'matthews'
+      rte: 'accuracy'
+      mrpc: 'accuracy'
+      cola: 'matthews_correlation'

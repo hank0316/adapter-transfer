@@ -4,17 +4,19 @@ from scipy.stats import spearmanr
 from datasets import load_dataset, load_metric
 from transformers import EvalPrediction
 
-from data_utils.Dataset import CustomDataset
+from data_utils.Dataset import GLUEDataset
 
 class DatasetManager:
     def __init__(self, task_name, tokenizer='roberta-base', size=1000, data_seed=316):
         self.task_name = task_name
-        self.num_labels = {'rte' : 2, 'stsb' : 1, 'mrpc' : 2, 'cola' : 2}
+        self.num_labels = {'rte' : 2, 'stsb' : 1, 'mrpc' : 2, 'cola' : 2,
+                           'mnli' : 3, 'sst2' : 2, 'qqp' : 2, 'qnli' : 2, 'wnli' : 2}
         self.data_seed = data_seed
         if self.task_name in ['rte', 'stsb', 'mrpc', 'cola']:
             self.raw_set = load_dataset('glue', self.task_name)
-            self.data = CustomDataset(self.raw_set, task_name=self.task_name, tokenizer=tokenizer, train_size=size,
+            self.data = GLUEDataset(self.raw_set, task_name=self.task_name, tokenizer=tokenizer, train_size=size,
                                       data_seed=self.data_seed)
+            self.metric = load_metric('glue', self.task_name)
         else:
             raise NotImplementedError
     
@@ -22,33 +24,34 @@ class DatasetManager:
         if split == 'train':
             return self.data['train']
         elif split == 'eval':
-            return self.data['validation']
+            try:
+                return self.data['validation']
+            except:
+                print('Using mnli matched!')
+                return self.data['validation_matched']
         elif split == 'test':
-            return self.data['test']
+            try:
+                return self.data['test']
+            except:
+                return self.data['test_matched']
+
         else:
             return None
     
     def getMetric(self):
-        def compute_accuracy(p: EvalPrediction):
+        def compute_with_argmax(p: EvalPrediction):
             preds = np.argmax(p.predictions, axis=1)
-            return {"acc": (preds == p.label_ids).mean()}
+            return self.metric.compute(predictions=preds, references=p.label_ids)
 
-        def compute_spearmanr(p: EvalPrediction):
+        def compute_with_squeeze(p: EvalPrediction):
             preds = np.squeeze(p.predictions)
             labels = np.squeeze(p.label_ids)
-            return {"spearmanr": spearmanr(preds, labels).correlation}
+            return self.metric.compute(predictions=preds, references=labels)
         
-        def compute_matthews(p: EvalPrediction):
-            preds = np.argmax(p.predictions, axis=1)
-            metric = load_metric('matthews_correlation')
-            return {"matthews": metric.compute(references=p.label_ids, predictions=preds)['matthews_correlation']}
-        
-        if self.task_name in ['rte', 'mrpc']:
-            return compute_accuracy
-        elif self.task_name in ['stsb']:
-            return compute_spearmanr
-        elif self.task_name in ['cola']:
-            return compute_matthews
+        if self.task_name in ['stsb']:
+            return compute_with_squeeze
+        elif self.task_name in ['rte', 'mrpc', 'cola']:
+            return compute_with_argmax
         else:
             raise NotImplementedError
 
