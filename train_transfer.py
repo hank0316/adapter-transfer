@@ -54,6 +54,7 @@ def trainSingleTransfer(
     # Arguments for AdapterTrainer
     training_args = TrainingArguments(    # 我在想這些是不是也要按 task 去調整
         learning_rate=trainer_config['learning_rate'],
+        per_device_train_batch_size=trainer_config['batch_size'],
         max_steps=trainer_config['train_step'],
         save_steps=trainer_config['save_step'],
         save_total_limit=trainer_config['save_total_limit'],
