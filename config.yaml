@@ -1,5 +1,6 @@
 trainer:
   learning_rate: 1.0e-4
+  batch_size: 8
   train_step: 2000
   logging_step: 250
   eval_step: 250
@@ -25,9 +26,15 @@ exp_setup:
   num_multi_task: 3
   mtl_batch_size: 8
   tasks:
-    name: ['rte', 'stsb', 'mrpc', 'cola']
+    name: ['rte', 'stsb', 'mrpc', 'cola', 'mnli', 'sst2', 'qqp', 'qnli']
     metrics:
       stsb: 'spearmanr'
       rte: 'accuracy'
-      mrpc: 'accuracy'
+      mrpc: 'f1'
       cola: 'matthews_correlation'
+      mnli: 'accuracy'
+      sst2: 'accuracy'
+      qqp: 'f1'
+      qnli: 'accuracy'
+
+

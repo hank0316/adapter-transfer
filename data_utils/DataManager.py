@@ -10,9 +10,9 @@ class DatasetManager:
     def __init__(self, task_name, tokenizer='roberta-base', size=1000, data_seed=316):
         self.task_name = task_name
         self.num_labels = {'rte' : 2, 'stsb' : 1, 'mrpc' : 2, 'cola' : 2,
-                           'mnli' : 3, 'sst2' : 2, 'qqp' : 2, 'qnli' : 2, 'wnli' : 2}
+                           'mnli' : 3, 'sst2' : 2, 'qqp' : 2, 'qnli' : 2}
         self.data_seed = data_seed
-        if self.task_name in ['rte', 'stsb', 'mrpc', 'cola']:
+        if self.task_name in ['rte', 'stsb', 'mrpc', 'cola', 'mnli', 'sst2', 'qqp', 'qnli']:
             self.raw_set = load_dataset('glue', self.task_name)
             self.data = GLUEDataset(self.raw_set, task_name=self.task_name, tokenizer=tokenizer, train_size=size,
                                       data_seed=self.data_seed)
@@ -50,7 +50,7 @@ class DatasetManager:
         
         if self.task_name in ['stsb']:
             return compute_with_squeeze
-        elif self.task_name in ['rte', 'mrpc', 'cola']:
+        elif self.task_name in ['rte', 'mrpc', 'cola', 'mnli', 'sst2', 'qqp', 'qnli']:
             return compute_with_argmax
         else:
             raise NotImplementedError
