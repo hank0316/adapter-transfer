@@ -48,7 +48,7 @@ def trainSingleTransfer(
 
     # Start Training
     model.train_adapter('adapter')        # 先這樣寫
-    data_manager = DatasetManager(task, tokenizer=model_config['name'])
+    data_manager = DatasetManager(task, tokenizer=model_config['name'], data_seed=trainer_config['seed'])
     model.add_classification_head(task, num_labels=data_manager.getNumLabels())    # 如果要用不同類型的，這邊就寫個 if
 
     # Arguments for AdapterTrainer
@@ -60,6 +60,7 @@ def trainSingleTransfer(
         save_total_limit=trainer_config['save_total_limit'],
         eval_steps=trainer_config['eval_step'],
         evaluation_strategy='steps',
+        seed=trainer_config['seed'],
 
         logging_steps=trainer_config['logging_step'],
         logging_dir=trainer_config['logging_dir'],
