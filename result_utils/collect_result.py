@@ -1,8 +1,8 @@
 import json
 import os
 
-TASKS = ['cola', 'rte', 'mrpc', 'stsb']
-FINAL_CHECKPOINT = 2000
+TASKS = ['cola', 'rte', 'mrpc', 'stsb', 'qnli', 'mnli', 'qqp', 'sst2']
+FINAL_CHECKPOINT = 5000
 
 def traverse(cur_prefix, result):
 	path_prefix = '/'.join(cur_prefix)

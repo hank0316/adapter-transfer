@@ -1,9 +1,10 @@
 import os
 import json
+import wandb
 
 from typing import List, Union
 from transformers import RobertaConfig, RobertaAdapterModel, BertConfig, BertAdapterModel
-from transformers import TrainingArguments, AdapterTrainer
+from transformers import TrainingArguments, AdapterTrainer, EarlyStoppingCallback
 
 from data_utils.DataManager import DatasetManager
 
@@ -32,28 +33,35 @@ def trainSingleTransfer(
     task: str, 
     config: dict,
     model: Union[BertAdapterModel, RobertaAdapterModel],
-    cur_dir: list,
+    output_root: str,
+    curr_chain: list,
     load_if_exists=True
 ):
     trainer_config = config['trainer']
     model_config = config['model']
     task_config = config['exp_setup']['tasks']
 
-    if load_if_exists == True and os.path.exists(f'{os.path.join(*cur_dir)}/{trainer_config["ckpt_path"]}'):
-        model.load_adapter(f'{os.path.join(*cur_dir)}/{trainer_config["ckpt_path"]}/adapter')
-        print(f'{os.path.join(*cur_dir)}/{trainer_config["ckpt_path"]} found. Weights are loaded and skip training.')
+    curr_dir = os.path.join(output_root, *curr_chain)
+
+    if load_if_exists == True and os.path.exists(f'{curr_dir}/{trainer_config["ckpt_path"]}'):
+        model.load_adapter(f'{curr_dir}/{trainer_config["ckpt_path"]}/adapter')
+        print(f'{curr_dir}/{trainer_config["ckpt_path"]} found. Weights are loaded and skip training.')
         return
 
-    print(f'{os.path.join(*cur_dir)}/{trainer_config["ckpt_path"]} not found. Start training...')
+    # using wandb for logging messgae
+    wandb.init(project="seed_1209", group=task, name="-".join(curr_chain))
+    wandb.config.update(config)
+
+    print(f'{curr_dir}/{trainer_config["ckpt_path"]} not found. Start training...')
 
     # Start Training
     model.train_adapter('adapter')        # 先這樣寫
-    data_manager = DatasetManager(task, tokenizer=model_config['name'], data_seed=trainer_config['seed'])
+    data_manager = DatasetManager(task, tokenizer=model_config['name'], data_seed=trainer_config['seed'], size=trainer_config['size'])
     model.add_classification_head(task, num_labels=data_manager.getNumLabels())    # 如果要用不同類型的，這邊就寫個 if
 
     # Arguments for AdapterTrainer
-    training_args = TrainingArguments(    # 我在想這些是不是也要按 task 去調整
-        learning_rate=trainer_config['learning_rate'],
+    training_args = TrainingArguments(
+        learning_rate=float(task_config['lr'][task]),
         per_device_train_batch_size=trainer_config['batch_size'],
         max_steps=trainer_config['train_step'],
         save_steps=trainer_config['save_step'],
@@ -68,10 +76,11 @@ def trainSingleTransfer(
         load_best_model_at_end=trainer_config['load_best_model_at_end'],
         metric_for_best_model=trainer_config['metric_for_best_model'] + task_config['metrics'][task],
 
-        output_dir=f"{os.path.join(*cur_dir)}",
+        output_dir=f"{curr_dir}",
         overwrite_output_dir=trainer_config['overwrite_output_dir'],
         # The next line is important to ensure the dataset labels are properly passed to the model
         remove_unused_columns=trainer_config['remove_unused_columns'],
+        report_to="wandb"
     )
 
     trainer = AdapterTrainer(
@@ -79,20 +88,23 @@ def trainSingleTransfer(
         args=training_args,
         train_dataset=data_manager.getDataSplit('train'),
         eval_dataset=data_manager.getDataSplit('eval'),
-        compute_metrics=data_manager.getMetric()
+        compute_metrics=data_manager.getMetric(),
+#        callbacks=[EarlyStoppingCallback(early_stopping_patience=4)]
     )
     
     trainer.train()
     res = trainer.evaluate()
-    with open(f'{os.path.join(*cur_dir)}/result.json', 'w') as f:
+    with open(f'{curr_dir}/result.json', 'w') as f:
         json.dump(res, f, indent=4)
     
-    os.mkdir(f'{os.path.join(*cur_dir)}/{trainer_config["ckpt_path"]}')
+    os.mkdir(f'{curr_dir}/{trainer_config["ckpt_path"]}')
 
     # Save result
-    model.save_adapter(f'{os.path.join(*cur_dir)}/{trainer_config["ckpt_path"]}/adapter', 'adapter')
-    model.save_head(f'{os.path.join(*cur_dir)}/{trainer_config["ckpt_path"]}/head', task)
+    model.save_adapter(f'{curr_dir}/{trainer_config["ckpt_path"]}/adapter', 'adapter')
+    model.save_head(f'{curr_dir}/{trainer_config["ckpt_path"]}/head', task)
     model.delete_head(task)
+
+    wandb.finish()
 
 
 def trainTransfer(transfer_sequence: List[str], load_if_exists=True, **kwargs):
@@ -124,9 +136,10 @@ def trainTransfer(transfer_sequence: List[str], load_if_exists=True, **kwargs):
         raise
 
     # Run single task transfer
-    cur_dir = []
+    output_root = f'seed_{trainer_config["seed"]}'
+    curr_chain = []
     model.add_adapter('adapter', config='pfeiffer')
     model.train_adapter('adapter')     # 這行會 freeze model weight
     for task in transfer_sequence:
-        cur_dir.append(task)
-        trainSingleTransfer(task, config, model, cur_dir, load_if_exists)
+        curr_chain.append(task)
+        trainSingleTransfer(task, config, model, output_root, curr_chain, load_if_exists)

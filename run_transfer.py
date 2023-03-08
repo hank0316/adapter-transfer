@@ -1,4 +1,5 @@
 import yaml
+import wandb
 from itertools import permutations
 
 from train_transfer import trainTransfer
@@ -6,6 +7,7 @@ from train_transfer import trainTransfer
 import os
 os.environ["TRANSFORMERS_CACHE"] = "/tmp2/b08902126/cache"
 os.environ["HF_DATASETS_CACHE"] = "/tmp2/b08902126/cache"
+os.environ["WANDB_ENTITY"] = "miulab_transfer_learning"
 
 def main():
     with open('config.yaml', 'r') as f:
@@ -16,7 +18,7 @@ def main():
             exit(-1)
     
     tasks = config['exp_setup']['tasks']['name']
-    for sequence in list(permutations(tasks, config['exp_setup']['chain_length']))[0:12]:
+    for sequence in list(permutations(tasks, config['exp_setup']['chain_length']))[:]:
         print('=*=*=*=*= Current Sequence =*=*=*=*=')
         print(list(sequence))
         print('=*=*=*=*= Current Sequence =*=*=*=*=')

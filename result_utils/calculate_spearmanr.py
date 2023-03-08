@@ -1,5 +1,6 @@
 from scipy import stats
 import json
+from pprint import pprint
 
 def getPercentageResult(raw_result):
 	percentage_result = {}
@@ -29,10 +30,10 @@ def getPartial(raw_result, keys, indices=[0, 2]):
 	return ret_list
 
 if __name__ == '__main__':
-	with open('all_result.json', 'r') as f:
+	with open('../all_result.json', 'r') as f:
 		raw_result = json.load(f)
 	percentage_result = getPercentageResult(raw_result)
-#	percentage_result = raw_result
+	#	percentage_result = raw_result
 	dict_ABC, list_ABC = getABC(percentage_result)
 	list_AB = getPartial(percentage_result, dict_ABC.keys(), indices=[0, 1])
 	list_AC = getPartial(percentage_result, dict_ABC.keys(), indices=[0, 2])

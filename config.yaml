@@ -1,12 +1,13 @@
 trainer:
-  learning_rate: 1.0e-4
+  # learning_rate: 5.0e-5
   batch_size: 8
-  train_step: 2000
-  logging_step: 250
+  train_step: 5000
+  logging_step: 50
   eval_step: 250
   save_step: 250
   save_total_limit: 1
-  seed: 316
+  seed: 1209
+  size: 1000
   # Arguments for trainer
   load_best_model_at_end: True
   overwrite_output_dir: True
@@ -28,6 +29,16 @@ exp_setup:
   mtl_batch_size: 8
   tasks:
     name: ['rte', 'stsb', 'mrpc', 'cola', 'mnli', 'sst2', 'qqp', 'qnli']
+    # name: ["stsb", "rte", "mnli", "qnli", "mrpc", "sst2"]
+    lr:
+      rte: 8e-4
+      stsb: 9e-4
+      mrpc: 3e-4
+      cola: 7e-5
+      mnli: 2e-4
+      sst2: 7e-4
+      qqp: 5e-5
+      qnli: 3e-4
     metrics:
       stsb: 'spearmanr'
       rte: 'accuracy'

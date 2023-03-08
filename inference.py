@@ -13,33 +13,45 @@ from collections import defaultdict
 
 from data_utils.DataManager import DatasetManager
 
-
 file_name_mapping = {
     "rte": "RTE.tsv",
     "mrpc": "MRPC.tsv",
     "stsb": "STS-B.tsv",
-    "cola": "CoLA.tsv"
+    "cola": "CoLA.tsv",
+    "qqp": "QQP.tsv",
+    "sst2": "SST-2.tsv",
+    "mnli": "MNLI-m.tsv",
+    "qnli": "QNLI.tsv"
 }
-device = 'cuda:1'
+
+device = 'cuda'
 
 def testSequence(sequence: List[str], model: Union[BertAdapterModel, RobertaAdapterModel]):
-    cur_dir = []
+    tasks = []
     for task in sequence:
-        cur_dir.append(task)
-        # if os.path.exists(f'{os.path.join(*cur_dir)}/{file_name_mapping[task]}'):    # already predicted before
-        #    continue
-        
-        # load best checkpoint
-        with open(f'{os.path.join(*cur_dir)}/checkpoint-6000/trainer_state.json') as f:
-            tmp_json = json.load(f)
-            best_ckpt = os.path.basename(tmp_json['best_model_checkpoint'])
+        tasks.append(task)
+        root_folder = f'output_adapter1/{os.path.join(*tasks)}'
 
-        adapter_name = model.load_adapter(f'{os.path.join(*cur_dir)}/{best_ckpt}/adapter')
-        model.load_head(f'{os.path.join(*cur_dir)}/{best_ckpt}/{task}', load_as=adapter_name)
+        # create output folder
+        out_dir = f'test_result_qpoi/{root_folder}'
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir, exist_ok=True)
+        out_path = os.path.join(out_dir, file_name_mapping[task])
+
+        if os.path.exists(out_path):    # already predicted before
+            print(f'[testSequence]: {out_path} exists, continue.')
+            continue
+        
+        print(f'[testSequence]: processing {out_path}')
+        
+        adapter_name = model.load_adapter(f'{root_folder}/checkpoint-best/adapter', load_as=task)
+        head_name = model.load_head(f'{root_folder}/checkpoint-best/head', load_as=adapter_name)
         model.set_active_adapters(adapter_name)     # 這行會噴錯... 很怪...
         model.to(device)
+
         data_manager = DatasetManager(task)
         test_set = data_manager.getDataSplit('test')
+
         model.eval()
         results = defaultdict(list)
         with torch.no_grad():
@@ -49,19 +61,23 @@ def testSequence(sequence: List[str], model: Union[BertAdapterModel, RobertaAdap
                     attention_mask=data['attention_mask'].to(device)
                 )
                 logits = output.logits
-                if task == "stsb":
-                   preds = torch.squeeze(logits)
-                else:
-                   preds = torch.argmax(logits, dim=1)
+
                 results['id'].append(i)
-                results['label'].append(int(preds))
-#        with open(f'{os.path.join(*cur_dir)}/test_result.json', 'w') as f:
-#            json.dump(res, f, indent=4)
+
+                if task == "stsb":
+                    preds = float(torch.squeeze(logits))
+                    results['label'].append(preds)
+                else:
+                    preds = torch.argmax(logits, dim=1)
+                    results['label'].append(int(preds))
+                
+        # store result as tsv
         df = pd.DataFrame(results)
-        df.to_csv(f'{os.path.join(*cur_dir)}/{file_name_mapping[task]}', sep='\t', index=False)
-        # predict and output in [cur_dir/test_result.csv]
-	
-        # delete head
+        df.to_csv(out_path, sep='\t', index=False)
+
+        # remove adapter & head from the model
+        model.set_active_adapters(None)
+        model.delete_adapter(adapter_name)
         model.delete_head(adapter_name)
     return
 
@@ -92,10 +108,10 @@ def main():
     else:
         raise
 
-    for sequence in permutations(tasks, config['exp_setup']['chain_length']):
+    for sequence in list(permutations(tasks, config['exp_setup']['chain_length']))[0:6]:
         print(f"=*=*=*= Sequence: {sequence} =*=*=*=")
         testSequence(sequence, model)
 
-
 if __name__ == '__main__':
     main()
+
